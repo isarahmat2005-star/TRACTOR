@@ -1,0 +1,16 @@
+{
+  "name": "tractor-by-irs",
+  "version": "1.0.0",
+  "description": "TracTor by IRS - Batch Trace",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "potrace": "^2.1.8"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}
