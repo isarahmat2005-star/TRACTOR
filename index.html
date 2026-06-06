@@ -56,7 +56,7 @@ header{
 /* ── MAIN LAYOUT ── */
 .workspace{
   display:grid;
-  grid-template-columns:20% 1fr 20%;
+  grid-template-columns:minmax(260px, 20%) 1fr minmax(220px, 20%);
   flex:1;overflow:hidden;
   min-height:0;
 }
@@ -147,6 +147,12 @@ header{
   border:1px solid var(--border);background:none;
   cursor:pointer;border-radius:var(--r);padding:1px;flex-shrink:0;
 }
+#optColorHex {
+  width: 55px; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--mono); font-size: 10px;
+  padding: 3px; border-radius: var(--r); text-align: center; outline: none; flex-shrink:0;
+}
+#optColorHex:focus { border-color: var(--accent); }
 .bg-tol-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
 
 /* preview mode tabs */
@@ -369,7 +375,6 @@ input[type=file]{display:none;}
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <img class="logo-img" src="gambar.png" alt="TracTor" onerror="this.style.display='none'"/>
   <div class="logo-text">Trac<span>Tor</span></div>
@@ -379,10 +384,8 @@ input[type=file]{display:none;}
 
 <div class="workspace">
 
-  <!-- ═══ KIRI 30% ═══ -->
   <div class="left">
 
-    <!-- Input Folder -->
     <div class="sec-label">Input</div>
     <div class="folder-row">
       <div class="folder-lbl">Source Folder</div>
@@ -392,7 +395,6 @@ input[type=file]{display:none;}
       </div>
     </div>
 
-    <!-- Output Folder -->
     <div class="sec-label">Output</div>
     <div class="folder-row">
       <div class="folder-lbl">Output Folder</div>
@@ -404,7 +406,6 @@ input[type=file]{display:none;}
 
     <div class="sec-label">Trace Settings</div>
 
-    <!-- Sliders -->
     <div class="sliders-wrap">
       <div class="opt-row">
         <span class="opt-lbl">Threshold</span>
@@ -429,11 +430,11 @@ input[type=file]{display:none;}
       <div class="opt-row">
         <span class="opt-lbl">Color</span>
         <input type="color" id="optColor" value="#000000"/>
+        <input type="text" id="optColorHex" value="#000000" maxlength="7" spellcheck="false"/>
         <span class="opt-val" style="color:var(--muted);font-size:8px;">FILL</span>
       </div>
     </div>
 
-    <!-- Preview Mode Tabs -->
     <div class="tabs-wrap">
       <div class="tabs-label">Preview Mode</div>
       <div class="tabs">
@@ -446,32 +447,26 @@ input[type=file]{display:none;}
 
     <div class="left-spacer"></div>
 
-    <!-- Progress -->
     <div class="prog-wrap"><div class="prog-fill" id="progressFill"></div></div>
 
-    <!-- Execute -->
     <button class="btn-execute" id="btnExecute" disabled>▶ Mulai Batch Trace</button>
 
   </div>
 
-  <!-- ═══ TENGAH 50% ═══ -->
   <div class="mid">
 
-    <!-- Preview utama -->
     <div class="preview-main" id="previewMain">
       <div class="preview-empty" id="previewEmpty">NO IMAGE<br>SELECTED</div>
       <canvas id="previewCanvas" style="display:none;"></canvas>
       <div class="preview-loading" id="previewLoading">PROCESSING…</div>
     </div>
 
-    <!-- Filmstrip -->
     <div class="filmstrip-wrap">
       <div class="filmstrip-inner" id="filmstrip"></div>
     </div>
 
   </div>
 
-  <!-- ═══ KANAN 20% ═══ -->
   <div class="right">
     <div class="log-header">
       <span>Process Log</span>
@@ -482,7 +477,6 @@ input[type=file]{display:none;}
 
 </div>
 
-<!-- STATUS BAR -->
 <div class="statusbar">
   <span class="status-msg" id="statusMsg">Ready. Pilih folder input untuk memulai.</span>
   <span class="status-count" id="statusCount">—</span>
