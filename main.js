@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const potrace = require('potrace');
 const { createCanvas, loadImage } = require('canvas');
+const { autoUpdater } = require('electron-updater');
 
 // ─── ATURAN MUTLAK: fungsi random berbasis crypto ───────────────────────────
 function R() {
@@ -36,7 +37,11 @@ function createWindow() {
   win.loadFile('index.html');
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  autoUpdater.checkForUpdatesAndNotify();
+});
+
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
