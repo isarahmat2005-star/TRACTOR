@@ -1,33 +1,569 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>TracTor by IRS</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #1e1e1e; color: #fff; }
-        #dropzone { border: 2px dashed #4CAF50; padding: 50px; text-align: center; cursor: pointer; margin-bottom: 20px; border-radius: 8px; }
-        #dropzone:hover { background: #2a2a2a; }
-        .preview-container { text-align: center; }
-        #preview { max-width: 100%; height: 250px; border: 1px solid #555; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAACVJREFUKFNjZCASMDKgAnv37v3PBEWwyTBx0kwwMQaKqGBgAABd9wcxt9k2YAAAAABJRU5ErkJggg=='); }
-        button { padding: 10px 20px; font-size: 16px; background: #4CAF50; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
-        button:disabled { background: #555; cursor: not-allowed; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TracTor by IRS</title>
+<style>
+  /* ── FONTS ── */
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
+
+  /* ── TOKENS ── */
+  :root {
+    --bg:       #0a0a0a;
+    --surface:  #111111;
+    --panel:    #161616;
+    --border:   #2a2a2a;
+    --accent:   #e8ff47;
+    --accent2:  #ff6b35;
+    --text:     #e0e0e0;
+    --muted:    #555;
+    --success:  #39d98a;
+    --error:    #ff4d4d;
+    --mono:     'Share Tech Mono', monospace;
+    --sans:     'Barlow Condensed', sans-serif;
+    --radius:   2px;
+    --trans:    160ms cubic-bezier(.4,0,.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    letter-spacing: .01em;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 24px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: .12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .logo span { color: var(--accent2); }
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+  .header-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+  }
+  .version {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .15em;
+  }
+
+  /* ── LAYOUT ── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+
+  /* DROP ZONE */
+  .dropzone {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border: 1.5px dashed var(--border);
+    margin: 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color var(--trans), background var(--trans);
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .dropzone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(255,255,255,.012) 8px,
+      rgba(255,255,255,.012) 9px
+    );
+    pointer-events: none;
+  }
+  .dropzone.active, .dropzone:hover {
+    border-color: var(--accent);
+    background: rgba(232,255,71,.04);
+  }
+  .dropzone.active { border-style: solid; }
+  .drop-icon {
+    font-size: 48px;
+    line-height: 1;
+    opacity: .35;
+    transition: opacity var(--trans), transform var(--trans);
+  }
+  .dropzone:hover .drop-icon { opacity: .7; transform: translateY(-4px); }
+  .drop-label {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .drop-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #383838;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .btn-upload {
+    margin-top: 4px;
+    padding: 8px 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color var(--trans), color var(--trans);
+  }
+  .btn-upload:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* FILE LIST */
+  .file-list-wrap {
+    height: 180px;
+    border-top: 1px solid var(--border);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .file-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 1;
+  }
+  .file-list-header span {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .btn-clear {
+    background: none; border: none;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: .12em; color: var(--muted);
+    cursor: pointer; text-transform: uppercase;
+    transition: color var(--trans);
+  }
+  .btn-clear:hover { color: var(--error); }
+  .file-list { list-style: none; }
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.03);
+    cursor: pointer;
+    transition: background var(--trans);
+  }
+  .file-item:hover { background: rgba(255,255,255,.03); }
+  .file-item.selected { background: rgba(232,255,71,.06); }
+  .file-item .fi-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border); flex-shrink: 0;
+  }
+  .file-item.done .fi-dot { background: var(--success); }
+  .file-item.error .fi-dot { background: var(--error); }
+  .file-item.processing .fi-dot {
+    background: var(--accent);
+    animation: pulse 600ms ease infinite alternate;
+  }
+  @keyframes pulse { from { opacity: .4; } to { opacity: 1; } }
+  .file-item .fi-name {
+    font-family: var(--mono); font-size: 11px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .file-item .fi-status {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--muted); flex-shrink: 0; letter-spacing: .1em;
+  }
+  .file-item.done .fi-status { color: var(--success); }
+  .file-item.error .fi-status { color: var(--error); }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+    transition: width 200ms ease;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* PREVIEW */
+  .preview-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-label {
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: repeating-conic-gradient(#141414 0% 25%, #111111 0% 50%) 0 0 / 20px 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  #previewCanvas {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .canvas-empty {
+    font-family: var(--mono); font-size: 11px;
+    color: #2a2a2a; letter-spacing: .2em; text-transform: uppercase;
+    text-align: center; line-height: 2;
+  }
+
+  /* OPTIONS */
+  .options-wrap {
+    border-top: 1px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+    background: var(--panel);
+  }
+  .opt-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .opt-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .opt-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 2px;
+    background: var(--border);
+    outline: none;
+    border-radius: 0;
+    accent-color: var(--accent);
+  }
+  .opt-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 0;
+    cursor: pointer;
+  }
+  .opt-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    width: 30px;
+    text-align: right;
+  }
+  .opt-row input[type=color] {
+    width: 32px; height: 22px;
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    border-radius: var(--radius);
+    padding: 1px;
+  }
+
+  /* OUTPUT DIR */
+  .outdir-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .outdir-path {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: .08em;
+  }
+  .btn-dir {
+    padding: 5px 12px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: border-color var(--trans), color var(--trans);
+    flex-shrink: 0;
+  }
+  .btn-dir:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* EXECUTE BUTTON */
+  .btn-execute {
+    margin: 12px 16px;
+    padding: 14px 24px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--trans), transform var(--trans), opacity var(--trans);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-execute::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    transition: background var(--trans);
+  }
+  .btn-execute:hover::after { background: rgba(0,0,0,.12); }
+  .btn-execute:active { transform: scale(.98); }
+  .btn-execute:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-execute.running {
+    background: var(--accent2);
+    animation: shimmer 1.4s linear infinite;
+  }
+  @keyframes shimmer {
+    0%   { filter: brightness(1); }
+    50%  { filter: brightness(1.18); }
+    100% { filter: brightness(1); }
+  }
+
+  /* STATUS BAR */
+  .statusbar {
+    height: 26px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .status-msg {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .12em;
+    flex: 1;
+  }
+  .status-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .12em;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  input[type=file] { display: none; }
+</style>
 </head>
 <body>
-    <h2>TracTor by IRS - Batch Image to Vector</h2>
-    <div id="dropzone">Drop Gambar ke Sini atau Klik untuk Upload</div>
-    <input type="file" id="fileInput" multiple style="display:none;" accept="image/png, image/jpeg">
-    
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <button id="btnProcess">Mulai Batch Trace</button>
-        <span id="status" style="font-weight: bold; color: #4CAF50;">Menunggu file...</span>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">Trac<span>Tor</span></div>
+    <div class="logo-sub">by IRS · Batch Vector Converter</div>
+  </div>
+  <div class="header-rule"></div>
+  <div class="version">v1.0.0 · OFFLINE</div>
+</header>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT -->
+  <div class="left">
+
+    <!-- DROP ZONE -->
+    <div class="dropzone" id="dropzone">
+      <div class="drop-icon">⬡</div>
+      <div class="drop-label">Drop Images Here</div>
+      <div class="drop-sub">JPG · PNG · BMP · GIF · TIFF</div>
+      <button class="btn-upload" id="btnUpload">[ Browse Files ]</button>
     </div>
-    
-    <div class="preview-container" style="margin-top: 20px;">
-        <h3>Preview Input:</h3>
-        <canvas id="preview"></canvas>
+    <input type="file" id="fileInput" multiple accept="image/*" />
+
+    <!-- PROGRESS -->
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
     </div>
 
-    <script src="renderer.js"></script>
+    <!-- FILE LIST -->
+    <div class="file-list-wrap">
+      <div class="file-list-header">
+        <span id="fileCount">0 Files Loaded</span>
+        <button class="btn-clear" id="btnClear">[ Clear ]</button>
+      </div>
+      <ul class="file-list" id="fileList"></ul>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+
+    <!-- PREVIEW -->
+    <div class="preview-wrap">
+      <div class="panel-label">Live Preview</div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="canvas-empty" id="canvasEmpty">
+          NO IMAGE<br>SELECTED
+        </div>
+        <canvas id="previewCanvas" style="display:none;"></canvas>
+      </div>
+    </div>
+
+    <!-- OPTIONS -->
+    <div class="options-wrap">
+      <div class="panel-label" style="padding:0;border:none;">Trace Options</div>
+      <div class="opt-row">
+        <span class="opt-label">Threshold</span>
+        <input type="range" id="optThreshold" min="1" max="255" value="128" />
+        <span class="opt-val" id="valThreshold">128</span>
+      </div>
+      <div class="opt-row">
+        <span class="opt-label">Turd Size</span>
+        <input type="range" id="optTurd" min="0" max="20" value="2" />
+        <span class="opt-val" id="valTurd">2</span>
+      </div>
+      <div class="opt-row">
+        <span class="opt-label">Tolerance</span>
+        <input type="range" id="optTolerance" min="1" max="10" value="2" />
+        <span class="opt-val" id="valTolerance">0.2</span>
+      </div>
+      <div class="opt-row">
+        <span class="opt-label">Trace Color</span>
+        <input type="color" id="optColor" value="#000000" />
+      </div>
+    </div>
+
+    <!-- OUTPUT DIR -->
+    <div class="outdir-row">
+      <span class="outdir-path" id="outputDirLabel">— pilih folder output —</span>
+      <button class="btn-dir" id="btnDir">[ Folder ]</button>
+    </div>
+
+    <!-- EXECUTE -->
+    <button class="btn-execute" id="btnExecute" disabled>
+      ▶ Mulai Batch Trace
+    </button>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span class="status-msg" id="statusMsg">Ready. Load images to begin.</span>
+  <span class="status-count" id="statusCount">—</span>
+</div>
+
+<script src="renderer.js"></script>
 </body>
 </html>
